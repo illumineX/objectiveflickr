@@ -1,7 +1,7 @@
 //
 // OFUtilities.h
 //
-// Copyright (c) 2009-2011 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2006-2014 Lukhnos D. Liu (http://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -31,7 +31,7 @@ NSString *OFMD5HexStringFromNSString(NSString *inStr);
 NSString *OFEscapedURLStringFromNSString(NSString *inStr);
 NSString *OFEscapedURLStringFromNSStringWithExtraEscapedChars(NSString *inStr, NSString *inEscChars);
 
-NSString *OFGenerateUUIDString();
+NSString *OFGenerateUUIDString(void);
 
 NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage);
 NSDictionary *OFExtractURLQueryParameter(NSString *inQuery);

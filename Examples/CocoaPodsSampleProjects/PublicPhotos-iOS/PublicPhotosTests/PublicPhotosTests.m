@@ -1,7 +1,7 @@
 //
-// MainWindowController.h
+// PublicPhotosTests.m
 //
-// Copyright (c) 2009 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2014 Lukhnos D. Liu (http://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -25,16 +25,29 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#import <Cocoa/Cocoa.h>
-#import <WebKit/WebKit.h>
-#import <ObjectiveFlickr/ObjectiveFlickr.h>
+#import <XCTest/XCTest.h>
 
-@interface MainWindowController : NSWindowController <OFFlickrAPIRequestDelegate>
+@interface PublicPhotosTests : XCTestCase
+
+@end
+
+@implementation PublicPhotosTests
+
+- (void)setUp
 {
-	OFFlickrAPIContext *flickrContext;
-	OFFlickrAPIRequest *flickrRequest;
-	IBOutlet NSTextView *textView;
-	IBOutlet WebView *webView;
+    [super setUp];
+    // Put setup code here. This method is called before the invocation of each test method in the class.
 }
-- (IBAction)nextRandomPhotoAction:(id)sender;
+
+- (void)tearDown
+{
+    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    [super tearDown];
+}
+
+- (void)testExample
+{
+    XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
+}
+
 @end

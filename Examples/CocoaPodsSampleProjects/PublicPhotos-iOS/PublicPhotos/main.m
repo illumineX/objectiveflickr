@@ -1,7 +1,7 @@
 //
-// MainWindowController.h
+// main.m
 //
-// Copyright (c) 2009 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2014 Lukhnos D. Liu (http://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -25,16 +25,13 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#import <Cocoa/Cocoa.h>
-#import <WebKit/WebKit.h>
-#import <ObjectiveFlickr/ObjectiveFlickr.h>
+#import <UIKit/UIKit.h>
 
-@interface MainWindowController : NSWindowController <OFFlickrAPIRequestDelegate>
+#import "OFAppDelegate.h"
+
+int main(int argc, char * argv[])
 {
-	OFFlickrAPIContext *flickrContext;
-	OFFlickrAPIRequest *flickrRequest;
-	IBOutlet NSTextView *textView;
-	IBOutlet WebView *webView;
+    @autoreleasepool {
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([OFAppDelegate class]));
+    }
 }
-- (IBAction)nextRandomPhotoAction:(id)sender;
-@end

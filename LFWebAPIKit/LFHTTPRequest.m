@@ -195,6 +195,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
     }
 
     if (!_receivedDataTracker) {
+        
         // update one last time the total sent bytes
         if ([_delegate respondsToSelector:@selector(httpRequest:sentBytes:total:)]) {
             [_delegate httpRequest:self sentBytes:_lastSentBytes total:_lastSentBytes];
@@ -759,7 +760,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType eventType, void *clientCallBackInfo)
 {
     id pool = [NSAutoreleasePool new];
-
+    
     LFHTTPRequest *request = (LFHTTPRequest *)clientCallBackInfo;
     switch (eventType) {
         case kCFStreamEventHasBytesAvailable:

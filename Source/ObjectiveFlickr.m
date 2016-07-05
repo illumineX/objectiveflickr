@@ -516,18 +516,16 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     NSMutableString *combinedDataString = [NSMutableString string];
     NSEnumerator *enumerator = [formDictionary keyEnumerator];
     
-    id key = [enumerator nextObject];
+    NSString *key = [enumerator nextObject];
     if (key) {
-        id value = [formDictionary objectForKey:key];
-        [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", 
-                                          [(NSString*)key stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
-                                          OFEscapedURLStringFromNSStringWithExtraEscapedChars([value description], kEscapeChars)]];
+        NSString *value = [[formDictionary objectForKey:key] description];
+        [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
         
-		while ((key = [enumerator nextObject])) {
-			value = [formDictionary objectForKey:key];
-			[combinedDataString appendString:[NSString stringWithFormat:@"&%@=%@", [(NSString*)key stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding], OFEscapedURLStringFromNSStringWithExtraEscapedChars([value description], kEscapeChars)]];
-		}
-	}
+        while ((key = [enumerator nextObject])) {
+            value = [[formDictionary objectForKey:key] description];
+            [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
+        }
+    }
     
     return [combinedDataString dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:NO];    
 }

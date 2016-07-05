@@ -34,14 +34,14 @@
     NSMutableString *combinedDataString = [NSMutableString string];
     NSEnumerator *enumerator = [formDictionary keyEnumerator];
 
-    id key = [enumerator nextObject];
+    NSString *key = [enumerator nextObject];
     if (key) {
-        id value = [formDictionary objectForKey:key];
-        [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [(NSString*)key stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding], [value stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+        NSString *value = [[formDictionary objectForKey:key] description];
+        [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
 
 		while ((key = [enumerator nextObject])) {
-			value = [formDictionary objectForKey:key];
-			[combinedDataString appendString:[NSString stringWithFormat:@"&%@=%@", [(NSString*)key stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding], [value stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+			value = [[formDictionary objectForKey:key] description];
+            [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
 		}
 	}
 

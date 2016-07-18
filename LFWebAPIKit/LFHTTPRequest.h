@@ -81,7 +81,7 @@ extern NSString *const LFHTTPRequestPOSTMethod;
 	NSMessagePort *_synchronousMessagePort;
 }
 
-- (id)init;
+- (instancetype)init;
 - (BOOL)isRunning;
 - (void)cancel;
 - (void)cancelWithoutDelegateMessage;
@@ -97,12 +97,12 @@ extern NSString *const LFHTTPRequestPOSTMethod;
 - (BOOL)performMethod:(NSString *)methodName onURL:(NSURL *)url withInputStream:(NSInputStream *)inputStream knownContentSize:(unsigned int)byteStreamSize;
 #endif
 
-- (NSData *)getReceivedDataAndDetachFromRequest;
+@property (NS_NONATOMIC_IOSONLY, getter=getReceivedDataAndDetachFromRequest, readonly, copy) NSData *receivedDataAndDetachFromRequest;
 
 - (NSTimeInterval)timeoutInterval;
 - (void)setTimeoutInterval:(NSTimeInterval)timeoutInterval;
 - (NSData *)receivedData;
-- (NSString *)receivedContentType;
+@property (NS_NONATOMIC_IOSONLY, readonly, copy) NSString *receivedContentType;
 #if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_4
 - (NSUInteger)expectedDataLength;
 #else

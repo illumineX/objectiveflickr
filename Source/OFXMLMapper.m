@@ -39,7 +39,7 @@ NSString *const OFXMLTextContentKey = @"_text";
     [super dealloc];
 }
 
-- (id)init
+- (instancetype)init
 {
     if ((self = [super init])) {
         resultantDictionary = [[NSMutableDictionary alloc] init];
@@ -54,7 +54,7 @@ NSString *const OFXMLTextContentKey = @"_text";
 	currentDictionary = resultantDictionary;
 	
     NSXMLParser *parser = [[NSXMLParser alloc] initWithData:inData];
-	[parser setDelegate:self];
+	parser.delegate = self;
 	[parser parse];
 	[parser release];
 }
@@ -78,7 +78,7 @@ NSString *const OFXMLTextContentKey = @"_text";
 	NSMutableDictionary *mutableAttrDict = attributeDict ? [NSMutableDictionary dictionaryWithDictionary:attributeDict] : [NSMutableDictionary dictionary];
 
 	// see if it's duplicated
-	id element = [currentDictionary objectForKey:elementName];
+	id element = currentDictionary[elementName];
 	if (element) {
 		if (![element isKindOfClass:[NSMutableArray class]]) {
 			if ([element isKindOfClass:[NSMutableDictionary class]]) {
@@ -86,7 +86,7 @@ NSString *const OFXMLTextContentKey = @"_text";
 				[currentDictionary removeObjectForKey:elementName];
 				
 				NSMutableArray *newArray = [NSMutableArray arrayWithObject:element];
-				[currentDictionary setObject:newArray forKey:elementName];
+				currentDictionary[elementName] = newArray;
 				[element release];
 				
 				element = newArray;
@@ -101,11 +101,11 @@ NSString *const OFXMLTextContentKey = @"_text";
 	else {
 		// plural tag rule: if the parent's tag is plural and the incoming is singular, we'll make it into an array (we only handles the -s case)
 		
-		if ([currentElementName length] > [elementName length] && [currentElementName hasPrefix:elementName] && [currentElementName hasSuffix:@"s"]) {
-			[currentDictionary setObject:[NSMutableArray arrayWithObject:mutableAttrDict] forKey:elementName];
+		if (currentElementName.length > elementName.length && [currentElementName hasPrefix:elementName] && [currentElementName hasSuffix:@"s"]) {
+			currentDictionary[elementName] = [NSMutableArray arrayWithObject:mutableAttrDict];
 		}
 		else {
-			[currentDictionary setObject:mutableAttrDict forKey:elementName];
+			currentDictionary[elementName] = mutableAttrDict;
 		}
 	}
 	
@@ -119,23 +119,23 @@ NSString *const OFXMLTextContentKey = @"_text";
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
 {
-	if (![elementStack count]) {
+	if (!elementStack.count) {
 		@throw [NSException exceptionWithName:OFXMLMapperExceptionName reason:@"Unbalanced XML element tag closing" userInfo:nil];
 	}
 	
-	currentDictionary = [elementStack objectAtIndex:0];
+	currentDictionary = elementStack[0];
 	[elementStack removeObjectAtIndex:0];
 }
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
 {
-	NSString *existingContent = [currentDictionary objectForKey:OFXMLTextContentKey];
+	NSString *existingContent = currentDictionary[OFXMLTextContentKey];
 	if (existingContent) {
 		NSString *newContent = [existingContent stringByAppendingString:string];
-		[currentDictionary setObject:newContent forKey:OFXMLTextContentKey];		
+		currentDictionary[OFXMLTextContentKey] = newContent;		
 	}
 	else {
-		[currentDictionary setObject:string forKey:OFXMLTextContentKey];
+		currentDictionary[OFXMLTextContentKey] = string;
 	}
 }
 
@@ -149,6 +149,6 @@ NSString *const OFXMLTextContentKey = @"_text";
 @implementation NSDictionary (OFXMLMapperExtension)
 - (NSString *)textContent
 {
-    return [self objectForKey:OFXMLTextContentKey];
+    return self[OFXMLTextContentKey];
 }
 @end

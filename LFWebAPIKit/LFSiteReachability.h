@@ -50,7 +50,7 @@ extern NSString *const LFSiteReachabilityConnectionTypeWWAN;
 }
 - (void)startChecking;
 - (void)stopChecking;
-- (BOOL)isChecking;
+@property (NS_NONATOMIC_IOSONLY, getter=isChecking, readonly) BOOL checking;
 
 // When networkConnectivityExists returns YES, it simply means network interface is available
 // (e.g. WiFi not disabled, has 3G, etc.); that is, the device has the "potential" to connect,
@@ -58,7 +58,7 @@ extern NSString *const LFSiteReachabilityConnectionTypeWWAN;
 // the IP is not yet obtained; the interface is not yet fully "up", base station or WiFi hasn't
 // assigned a valid IP yet, etc. To read this way: If this method returns NO, it means
 // "forget about network, it doesn't exist at all"
-- (BOOL)networkConnectivityExists;	
+@property (NS_NONATOMIC_IOSONLY, readonly) BOOL networkConnectivityExists;	
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4 
 - (id<LFSiteReachabilityDelegate>)delegate;

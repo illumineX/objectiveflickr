@@ -92,7 +92,7 @@ static void AssertIsValidURLString(NSString *urlString)
     [super dealloc];
 }
 
-- (id)initWithAPIKey:(NSString *)inKey sharedSecret:(NSString *)inSharedSecret
+- (instancetype)initWithAPIKey:(NSString *)inKey sharedSecret:(NSString *)inSharedSecret
 {
     if ((self = [super init])) {
         key = [inKey copy];
@@ -123,7 +123,7 @@ static void AssertIsValidURLString(NSString *urlString)
 {
     NSString *perms = @"";
     
-    if ([inPermission length] > 0) {
+    if (inPermission.length > 0) {
         perms = [NSString stringWithFormat:@"&perms=%@", inPermission];
     }
     
@@ -139,27 +139,27 @@ static void AssertIsValidURLString(NSString *urlString)
     // * http://farm{farm-id}.staticflickr.com/{server-id}/{id}_{o-secret}_o.(jpg|gif|png)
 
 
-	NSString *photoID = [inDictionary objectForKey:@"id"];
+	NSString *photoID = inDictionary[@"id"];
     NSAssert([photoID length], nil);
 
-	NSString *secret = [inDictionary objectForKey:@"secret"];
+	NSString *secret = inDictionary[@"secret"];
     NSAssert([secret length], nil);
 
-	NSString *server = [inDictionary objectForKey:@"server"];
+	NSString *server = inDictionary[@"server"];
 	NSAssert([server length], nil);
 
-    NSString *farmID = [inDictionary objectForKey:@"farm"];
+    NSString *farmID = inDictionary[@"farm"];
 
     NSURL *basePhotoSourceURL = [NSURL URLWithString:photoSource];
-    NSString *scheme = [basePhotoSourceURL scheme];
-    NSString *host = [basePhotoSourceURL host];
+    NSString *scheme = basePhotoSourceURL.scheme;
+    NSString *host = basePhotoSourceURL.host;
 
-	if ([farmID length]) {
+	if (farmID.length) {
         host = [NSString stringWithFormat:@"farm%@.%@", farmID, host];
 	}
 
     NSString *sizeSuffix = @"";
-    if ([inSizeModifier length]) {
+    if (inSizeModifier.length) {
         sizeSuffix = [NSString stringWithFormat:@"_%@", inSizeModifier];
     }
 
@@ -175,13 +175,13 @@ static void AssertIsValidURLString(NSString *urlString)
 
 - (NSURL *)photoWebPageURLFromDictionary:(NSDictionary *)inDictionary
 {
-	return [NSURL URLWithString:[NSString stringWithFormat:@"%@%@/%@", photoWebPageSource, [inDictionary objectForKey:@"owner"], [inDictionary objectForKey:@"id"]]];
+	return [NSURL URLWithString:[NSString stringWithFormat:@"%@%@/%@", photoWebPageSource, inDictionary[@"owner"], inDictionary[@"id"]]];
 }
 
 - (NSURL *)loginURLFromFrobDictionary:(NSDictionary *)inFrob requestedPermission:(NSString *)inPermission
 {
-	NSString *frob = [[inFrob objectForKey:@"frob"] objectForKey:OFXMLTextContentKey];
-    NSDictionary *argDict = [frob length] ? [NSDictionary dictionaryWithObjectsAndKeys:frob, @"frob", inPermission, @"perms", nil] : [NSDictionary dictionaryWithObjectsAndKeys:inPermission, @"perms", nil];
+	NSString *frob = inFrob[@"frob"][OFXMLTextContentKey];
+    NSDictionary *argDict = frob.length ? @{@"frob": frob, @"perms": inPermission} : @{@"perms": inPermission};
 	NSString *URLString = [NSString stringWithFormat:@"%@?%@", authEndpoint, [self signedQueryFromArguments:argDict]];
 	return [NSURL URLWithString:URLString];
 }
@@ -280,28 +280,28 @@ static void AssertIsValidURLString(NSString *urlString)
 - (NSArray *)signedArgumentComponentsFromArguments:(NSDictionary *)inArguments useURIEscape:(BOOL)inUseEscape
 {
     NSMutableDictionary *newArgs = [NSMutableDictionary dictionaryWithDictionary:inArguments];
-	if ([key length]) {
-		[newArgs setObject:key forKey:@"api_key"];
+	if (key.length) {
+		newArgs[@"api_key"] = key;
 	}
 	
-	if ([authToken length]) {
-		[newArgs setObject:authToken forKey:@"auth_token"];
+	if (authToken.length) {
+		newArgs[@"auth_token"] = authToken;
 	}
 	
 	// combine the args
 	NSMutableArray *argArray = [NSMutableArray array];
-	NSMutableString *sigString = [NSMutableString stringWithString:[sharedSecret length] ? sharedSecret : @""];
-	NSArray *sortedArgs = [[newArgs allKeys] sortedArrayUsingSelector:@selector(compare:)];
+	NSMutableString *sigString = [NSMutableString stringWithString:sharedSecret.length ? sharedSecret : @""];
+	NSArray *sortedArgs = [newArgs.allKeys sortedArrayUsingSelector:@selector(compare:)];
 	NSEnumerator *argEnumerator = [sortedArgs objectEnumerator];
 	NSString *nextKey;
 	while ((nextKey = [argEnumerator nextObject])) {
-		NSString *value = [[newArgs objectForKey:nextKey] description];
+		NSString *value = [newArgs[nextKey] description];
 		[sigString appendFormat:@"%@%@", nextKey, value];
-		[argArray addObject:[NSArray arrayWithObjects:nextKey, (inUseEscape ? OFEscapedURLStringFromNSString(value) : value), nil]];
+		[argArray addObject:@[nextKey, (inUseEscape ? OFEscapedURLStringFromNSString(value) : value)]];
 	}
 	
 	NSString *signature = OFMD5HexStringFromNSString(sigString);    
-    [argArray addObject:[NSArray arrayWithObjects:@"api_sig", signature, nil]];
+    [argArray addObject:@[@"api_sig", signature]];
 	return argArray;
 }
 
@@ -322,14 +322,14 @@ static void AssertIsValidURLString(NSString *urlString)
 - (NSDictionary *)signedOAuthHTTPQueryArguments:(NSDictionary *)inArguments baseURL:(NSURL *)inURL method:(NSString *)inMethod
 {
     NSMutableDictionary *newArgs = [NSMutableDictionary dictionaryWithDictionary:inArguments];
-    [newArgs setObject:[OFGenerateUUIDString() substringToIndex:8] forKey:@"oauth_nonce"];
-    [newArgs setObject:[NSString stringWithFormat:@"%lu", (long)[[NSDate date] timeIntervalSince1970]] forKey:@"oauth_timestamp"];
-    [newArgs setObject:@"1.0" forKey:@"oauth_version"];
-    [newArgs setObject:@"HMAC-SHA1" forKey:@"oauth_signature_method"];
-    [newArgs setObject:key forKey:@"oauth_consumer_key"];
+    newArgs[@"oauth_nonce"] = [OFGenerateUUIDString() substringToIndex:8];
+    newArgs[@"oauth_timestamp"] = [NSString stringWithFormat:@"%lu", (long)[NSDate date].timeIntervalSince1970];
+    newArgs[@"oauth_version"] = @"1.0";
+    newArgs[@"oauth_signature_method"] = @"HMAC-SHA1";
+    newArgs[@"oauth_consumer_key"] = key;
     
-    if (![inArguments objectForKey:@"oauth_token"] && oauthToken) {
-        [newArgs setObject:oauthToken forKey:@"oauth_token"];
+    if (!inArguments[@"oauth_token"] && oauthToken) {
+        newArgs[@"oauth_token"] = oauthToken;
     }
     
     NSString *signatureKey = nil;
@@ -343,23 +343,23 @@ static void AssertIsValidURLString(NSString *urlString)
     NSMutableString *baseString = [NSMutableString string];
     [baseString appendString:inMethod];
     [baseString appendString:@"&"];
-    [baseString appendString:OFEscapedURLStringFromNSStringWithExtraEscapedChars([inURL absoluteString], kEscapeChars)];
+    [baseString appendString:OFEscapedURLStringFromNSStringWithExtraEscapedChars(inURL.absoluteString, kEscapeChars)];
     
-    NSArray *sortedArgKeys = [[newArgs allKeys] sortedArrayUsingSelector:@selector(compare:)];
+    NSArray *sortedArgKeys = [newArgs.allKeys sortedArrayUsingSelector:@selector(compare:)];
     [baseString appendString:@"&"];
     
     NSMutableArray *baseStrArgs = [NSMutableArray array];
     NSEnumerator *kenum = [sortedArgKeys objectEnumerator];
     NSString *k;
     while ((k = [kenum nextObject]) != nil) {
-        [baseStrArgs addObject:[NSString stringWithFormat:@"%@=%@", k, OFEscapedURLStringFromNSStringWithExtraEscapedChars([[newArgs objectForKey:k] description], kEscapeChars)]];
+        [baseStrArgs addObject:[NSString stringWithFormat:@"%@=%@", k, OFEscapedURLStringFromNSStringWithExtraEscapedChars([newArgs[k] description], kEscapeChars)]];
     }
     
     [baseString appendString:OFEscapedURLStringFromNSStringWithExtraEscapedChars([baseStrArgs componentsJoinedByString:@"&"], kEscapeChars)];
     
     NSString *signature = OFHMACSha1Base64(signatureKey, baseString);
     
-    [newArgs setObject:signature forKey:@"oauth_signature"];
+    newArgs[@"oauth_signature"] = signature;
     return newArgs;
 }
 
@@ -371,11 +371,11 @@ static void AssertIsValidURLString(NSString *urlString)
     NSEnumerator *kenum = [newArgs keyEnumerator];
     NSString *k;
     while ((k = [kenum nextObject]) != nil) {
-        [queryArray addObject:[NSString stringWithFormat:@"%@=%@", k, OFEscapedURLStringFromNSStringWithExtraEscapedChars([[newArgs objectForKey:k] description], kEscapeChars)]];
+        [queryArray addObject:[NSString stringWithFormat:@"%@=%@", k, OFEscapedURLStringFromNSStringWithExtraEscapedChars([newArgs[k] description], kEscapeChars)]];
     }
     
     
-    NSString *newURLStringWithQuery = [NSString stringWithFormat:@"%@?%@", [inURL absoluteString], [queryArray componentsJoinedByString:@"&"]];
+    NSString *newURLStringWithQuery = [NSString stringWithFormat:@"%@?%@", inURL.absoluteString, [queryArray componentsJoinedByString:@"&"]];
     
     return [NSURL URLWithString:newURLStringWithQuery];
 }
@@ -399,13 +399,13 @@ static void AssertIsValidURLString(NSString *urlString)
     [super dealloc];
 }
 
-- (id)initWithAPIContext:(OFFlickrAPIContext *)inContext
+- (instancetype)initWithAPIContext:(OFFlickrAPIContext *)inContext
 {
     if ((self = [super init])) {
         context = [inContext retain];
         
         HTTPRequest = [[LFHTTPRequest alloc] init];
-        [HTTPRequest setDelegate:self];
+        HTTPRequest.delegate = self;
     }
     
     return self;
@@ -440,17 +440,17 @@ static void AssertIsValidURLString(NSString *urlString)
 
 - (NSTimeInterval)requestTimeoutInterval
 {
-    return [HTTPRequest timeoutInterval];
+    return HTTPRequest.timeoutInterval;
 }
 
 - (void)setRequestTimeoutInterval:(NSTimeInterval)inTimeInterval
 {
-    [HTTPRequest setTimeoutInterval:inTimeInterval];
+    HTTPRequest.timeoutInterval = inTimeInterval;
 }
 
 - (BOOL)isRunning
 {
-    return [HTTPRequest isRunning];
+    return HTTPRequest.isRunning;
 }
 
 - (void)cancel
@@ -461,46 +461,46 @@ static void AssertIsValidURLString(NSString *urlString)
 
 - (BOOL)fetchOAuthRequestTokenWithCallbackURL:(NSURL *)inCallbackURL
 {
-    if ([HTTPRequest isRunning]) {
+    if (HTTPRequest.isRunning) {
         return NO;
     }
 
-    NSDictionary *paramsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[inCallbackURL absoluteString], @"oauth_callback", nil];
+    NSDictionary *paramsDictionary = @{@"oauth_callback": inCallbackURL.absoluteString};
     NSURL *requestURL = [context oauthURLFromBaseURL:[NSURL URLWithString:@"https://www.flickr.com/services/oauth/request_token"] method:LFHTTPRequestGETMethod arguments:paramsDictionary];
-    [HTTPRequest setSessionInfo:OFFetchOAuthRequestTokenSession];
+    HTTPRequest.sessionInfo = OFFetchOAuthRequestTokenSession;
     [HTTPRequest setContentType:nil];
     return [HTTPRequest performMethod:LFHTTPRequestGETMethod onURL:requestURL withData:nil];
 }
 
 - (BOOL)fetchOAuthAccessTokenWithRequestToken:(NSString *)inRequestToken verifier:(NSString *)inVerifier
 {
-    if ([HTTPRequest isRunning]) {
+    if (HTTPRequest.isRunning) {
         return NO;
     }
-    NSDictionary *paramsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:inRequestToken, @"oauth_token", inVerifier, @"oauth_verifier", nil];
+    NSDictionary *paramsDictionary = @{@"oauth_token": inRequestToken, @"oauth_verifier": inVerifier};
     NSURL *requestURL = [context oauthURLFromBaseURL:[NSURL URLWithString:@"https://www.flickr.com/services/oauth/access_token"] method:LFHTTPRequestGETMethod arguments:paramsDictionary];
-    [HTTPRequest setSessionInfo:OFFetchOAuthAccessTokenSession];
+    HTTPRequest.sessionInfo = OFFetchOAuthAccessTokenSession;
     [HTTPRequest setContentType:nil];
     return [HTTPRequest performMethod:LFHTTPRequestGETMethod onURL:requestURL withData:nil];
 }
 
 - (BOOL)callAPIMethodWithGET:(NSString *)inMethodName arguments:(NSDictionary *)inArguments
 {
-    if ([HTTPRequest isRunning]) {
+    if (HTTPRequest.isRunning) {
         return NO;
     }
     
     // combine the parameters 
 	NSMutableDictionary *newArgs = inArguments ? [NSMutableDictionary dictionaryWithDictionary:inArguments] : [NSMutableDictionary dictionary];
-	[newArgs setObject:inMethodName forKey:@"method"];	
+	newArgs[@"method"] = inMethodName;	
 
     NSURL *requestURL = nil;
-    if ([context OAuthToken] && [context OAuthTokenSecret]) {
-        requestURL = [context oauthURLFromBaseURL:[NSURL URLWithString:[context RESTAPIEndpoint]] method:LFHTTPRequestGETMethod arguments:newArgs];
+    if (context.OAuthToken && context.OAuthTokenSecret) {
+        requestURL = [context oauthURLFromBaseURL:[NSURL URLWithString:context.RESTAPIEndpoint] method:LFHTTPRequestGETMethod arguments:newArgs];
     }
     else {
         NSString *query = [context signedQueryFromArguments:newArgs];
-        NSString *URLString = [NSString stringWithFormat:@"%@?%@", [context RESTAPIEndpoint], query];
+        NSString *URLString = [NSString stringWithFormat:@"%@?%@", context.RESTAPIEndpoint, query];
         requestURL = [NSURL URLWithString:URLString];
     }
     
@@ -518,11 +518,11 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     
     NSString *key = [enumerator nextObject];
     if (key) {
-        NSString *value = [[formDictionary objectForKey:key] description];
+        NSString *value = [formDictionary[key] description];
         [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
         
         while ((key = [enumerator nextObject])) {
-            value = [[formDictionary objectForKey:key] description];
+            value = [formDictionary[key] description];
             [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
         }
     }
@@ -532,19 +532,19 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
 
 - (BOOL)callAPIMethodWithPOST:(NSString *)inMethodName arguments:(NSDictionary *)inArguments
 {
-    if ([HTTPRequest isRunning]) {
+    if (HTTPRequest.isRunning) {
         return NO;
     }
     
     // combine the parameters 
 	NSMutableDictionary *newArgs = inArguments ? [NSMutableDictionary dictionaryWithDictionary:inArguments] : [NSMutableDictionary dictionary];
-	[newArgs setObject:inMethodName forKey:@"method"];	
+	newArgs[@"method"] = inMethodName;	
     
     
     NSData *postData = nil;
     
-    if ([context OAuthToken] && [context OAuthTokenSecret]) {
-        NSDictionary *signedArgs = [context signedOAuthHTTPQueryArguments:newArgs baseURL:[NSURL URLWithString:[context RESTAPIEndpoint]] method:LFHTTPRequestPOSTMethod];
+    if (context.OAuthToken && context.OAuthTokenSecret) {
+        NSDictionary *signedArgs = [context signedOAuthHTTPQueryArguments:newArgs baseURL:[NSURL URLWithString:context.RESTAPIEndpoint] method:LFHTTPRequestPOSTMethod];
         
         postData = NSDataFromOAuthPreferredWebForm(signedArgs);
     }
@@ -553,34 +553,34 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
         postData = [arguments dataUsingEncoding:NSUTF8StringEncoding];
     }
     
-	[HTTPRequest setContentType:LFHTTPRequestWWWFormURLEncodedContentType];
-	return [HTTPRequest performMethod:LFHTTPRequestPOSTMethod onURL:[NSURL URLWithString:[context RESTAPIEndpoint]] withData:postData];
+	HTTPRequest.contentType = LFHTTPRequestWWWFormURLEncodedContentType;
+	return [HTTPRequest performMethod:LFHTTPRequestPOSTMethod onURL:[NSURL URLWithString:context.RESTAPIEndpoint] withData:postData];
 }
 
 - (BOOL)uploadImageStream:(NSInputStream *)inImageStream suggestedFilename:(NSString *)inFilename MIMEType:(NSString *)inType arguments:(NSDictionary *)inArguments
 {
-    if ([HTTPRequest isRunning]) {
+    if (HTTPRequest.isRunning) {
         return NO;
     }
     
     // get the api_sig
     NSArray *argComponents = nil;
     
-    if ([context OAuthToken] && [context OAuthTokenSecret]) {
+    if (context.OAuthToken && context.OAuthTokenSecret) {
         NSMutableArray *newArgsComps = [NSMutableArray array];
-        NSDictionary *signedArgs = [context signedOAuthHTTPQueryArguments:(inArguments ? inArguments : [NSDictionary dictionary]) baseURL:[NSURL URLWithString:[context uploadEndpoint]] method:LFHTTPRequestPOSTMethod];
+        NSDictionary *signedArgs = [context signedOAuthHTTPQueryArguments:(inArguments ? inArguments : @{}) baseURL:[NSURL URLWithString:context.uploadEndpoint] method:LFHTTPRequestPOSTMethod];
         
         NSEnumerator *keyEnum = [signedArgs keyEnumerator];
         NSString *key;
         while ((key = [keyEnum nextObject]) != nil) {
             NSString *value = [signedArgs valueForKey:key];
-            [newArgsComps addObject:[NSArray arrayWithObjects:key, value, nil]];
+            [newArgsComps addObject:@[key, value]];
         }
         
         argComponents = newArgsComps;
     }
-    else if ([[context authToken] length] > 0) {
-        argComponents = [[self context] signedArgumentComponentsFromArguments:(inArguments ? inArguments : [NSDictionary dictionary]) useURIEscape:NO];
+    else if (context.authToken.length > 0) {
+        argComponents = [self.context signedArgumentComponentsFromArguments:(inArguments ? inArguments : @{}) useURIEscape:NO];
     }
     else {
         return NO;
@@ -596,11 +596,11 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     NSEnumerator *componentEnumerator = [argComponents objectEnumerator];
     NSArray *nextArgComponent;
     while ((nextArgComponent = [componentEnumerator nextObject])) {        
-        [multipartBegin appendFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n", separator, [nextArgComponent objectAtIndex:0], [nextArgComponent objectAtIndex:1]];
+        [multipartBegin appendFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n", separator, nextArgComponent[0], nextArgComponent[1]];
     }
 
     // add filename, if nil, generate a UUID
-    [multipartBegin appendFormat:@"--%@\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"%@\"\r\n", separator, [inFilename length] ? inFilename : OFGenerateUUIDString()];
+    [multipartBegin appendFormat:@"--%@\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"%@\"\r\n", separator, inFilename.length ? inFilename : OFGenerateUUIDString()];
     [multipartBegin appendFormat:@"Content-Type: %@\r\n\r\n", inType];
         
     [multipartEnd appendFormat:@"\r\n--%@--", separator];
@@ -617,7 +617,7 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     
     const char *UTF8String;
     size_t writeLength;
-    UTF8String = [multipartBegin UTF8String];
+    UTF8String = multipartBegin.UTF8String;
     writeLength = strlen(UTF8String);
 	
 	size_t __unused actualWrittenLength;
@@ -631,7 +631,7 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     NSAssert(buffer, @"Must have enough memory for copy buffer");
 
     [inImageStream open];
-    while ([inImageStream hasBytesAvailable]) {
+    while (inImageStream.hasBytesAvailable) {
         if (!(readSize = [inImageStream read:buffer maxLength:bufferSize])) {
             break;
         }
@@ -646,7 +646,7 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     free(buffer);
     
     
-    UTF8String = [multipartEnd UTF8String];
+    UTF8String = multipartEnd.UTF8String;
     writeLength = strlen(UTF8String);
 	actualWrittenLength = [outputStream write:(uint8_t *)UTF8String maxLength:writeLength];
     NSAssert(actualWrittenLength == writeLength, @"Must write multipartBegin");
@@ -655,27 +655,27 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
     NSError *error = nil;
     NSDictionary *fileInfo = [[NSFileManager defaultManager] attributesOfItemAtPath:uploadTempFilename error:&error];
     NSAssert(fileInfo && !error, @"Must have upload temp file");
-    NSNumber *fileSizeNumber = [fileInfo objectForKey:NSFileSize];
-    NSUInteger fileSize = [fileSizeNumber integerValue];
+    NSNumber *fileSizeNumber = fileInfo[NSFileSize];
+    NSUInteger fileSize = fileSizeNumber.integerValue;
     NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:uploadTempFilename];
 	
-    [HTTPRequest setContentType:contentType];
-    return [HTTPRequest performMethod:LFHTTPRequestPOSTMethod onURL:[NSURL URLWithString:[context uploadEndpoint]] withInputStream:inputStream knownContentSize:fileSize];
+    HTTPRequest.contentType = contentType;
+    return [HTTPRequest performMethod:LFHTTPRequestPOSTMethod onURL:[NSURL URLWithString:context.uploadEndpoint] withInputStream:inputStream knownContentSize:fileSize];
 }
 
 #pragma mark LFHTTPRequest delegate methods
 - (void)httpRequestDidComplete:(LFHTTPRequest *)request
 {
-    if ([request sessionInfo] == OFFetchOAuthRequestTokenSession) {
+    if (request.sessionInfo == OFFetchOAuthRequestTokenSession) {
         [request setSessionInfo:nil];
         
-        NSString *response = [[[NSString alloc] initWithData:[request receivedData] encoding:NSUTF8StringEncoding] autorelease];
+        NSString *response = [[[NSString alloc] initWithData:request.receivedData encoding:NSUTF8StringEncoding] autorelease];
 
         NSDictionary *params = OFExtractURLQueryParameter(response);
-        NSString *oat = [params objectForKey:@"oauth_token"];
-        NSString *oats = [params objectForKey:@"oauth_token_secret"];
+        NSString *oat = params[@"oauth_token"];
+        NSString *oats = params[@"oauth_token_secret"];
         if (!oat || !oats) {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:response, OFFlickrAPIRequestOAuthErrorUserInfoKey, nil];
+            NSDictionary *userInfo = @{OFFlickrAPIRequestOAuthErrorUserInfoKey: response};
             NSError *error = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestOAuthError userInfo:userInfo];            
             [delegate flickrAPIRequest:self didFailWithError:error];                
         }
@@ -685,19 +685,19 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
             [delegate flickrAPIRequest:self didObtainOAuthRequestToken:oat secret:oats];
         }
     }
-    else if ([request sessionInfo] == OFFetchOAuthAccessTokenSession) {
+    else if (request.sessionInfo == OFFetchOAuthAccessTokenSession) {
         [request setSessionInfo:nil];
 
-        NSString *response = [[[NSString alloc] initWithData:[request receivedData] encoding:NSUTF8StringEncoding] autorelease];
+        NSString *response = [[[NSString alloc] initWithData:request.receivedData encoding:NSUTF8StringEncoding] autorelease];
         NSDictionary *params = OFExtractURLQueryParameter(response);
         
-        NSString *fn = [params objectForKey:@"fullname"];
-        NSString *oat = [params objectForKey:@"oauth_token"];
-        NSString *oats = [params objectForKey:@"oauth_token_secret"];
-        NSString *nsid = [params objectForKey:@"user_nsid"];
-        NSString *un = [params objectForKey:@"username"];
+        NSString *fn = params[@"fullname"];
+        NSString *oat = params[@"oauth_token"];
+        NSString *oats = params[@"oauth_token_secret"];
+        NSString *nsid = params[@"user_nsid"];
+        NSString *un = params[@"username"];
         if (!fn || !oat || !oats || !nsid || !un) {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:response, OFFlickrAPIRequestOAuthErrorUserInfoKey, nil];
+            NSDictionary *userInfo = @{OFFlickrAPIRequestOAuthErrorUserInfoKey: response};
             NSError *error = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestOAuthError userInfo:userInfo];            
             [delegate flickrAPIRequest:self didFailWithError:error];            
         }
@@ -709,20 +709,20 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
         }
     }
     else {
-        NSDictionary *responseDictionary = [OFXMLMapper dictionaryMappedFromXMLData:[request receivedData]];	
-        NSDictionary *rsp = [responseDictionary objectForKey:@"rsp"];
-        NSString *stat = [rsp objectForKey:@"stat"];
+        NSDictionary *responseDictionary = [OFXMLMapper dictionaryMappedFromXMLData:request.receivedData];	
+        NSDictionary *rsp = responseDictionary[@"rsp"];
+        NSString *stat = rsp[@"stat"];
         
         // this also fails when (responseDictionary, rsp, stat) == nil, so it's a guranteed way of checking the result
         if (![stat isEqualToString:@"ok"]) {
-            NSDictionary *err = [rsp objectForKey:@"err"];
-            NSString *code = [err objectForKey:@"code"];
-            NSString *msg = [err objectForKey:@"msg"];
+            NSDictionary *err = rsp[@"err"];
+            NSString *code = err[@"code"];
+            NSString *msg = err[@"msg"];
         
             NSError *toDelegateError;
-            if ([code length]) {
+            if (code.length) {
                 // intValue for 10.4-compatibility
-                toDelegateError = [NSError errorWithDomain:OFFlickrAPIReturnedErrorDomain code:[code intValue] userInfo:[msg length] ? [NSDictionary dictionaryWithObjectsAndKeys:msg, NSLocalizedFailureReasonErrorKey, nil] : nil];				
+                toDelegateError = [NSError errorWithDomain:OFFlickrAPIReturnedErrorDomain code:code.intValue userInfo:msg.length ? @{NSLocalizedFailureReasonErrorKey: msg} : nil];				
             }
             else {
                 toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestFaultyXMLResponseError userInfo:nil];
@@ -745,13 +745,13 @@ static NSData *NSDataFromOAuthPreferredWebForm(NSDictionary *formDictionary)
 {
     NSError *toDelegateError = nil;
     if ([error isEqualToString:LFHTTPRequestConnectionError]) {
-		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestConnectionError userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Network connection error", NSLocalizedFailureReasonErrorKey, nil]];
+		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestConnectionError userInfo:@{NSLocalizedFailureReasonErrorKey: @"Network connection error"}];
     }
     else if ([error isEqualToString:LFHTTPRequestTimeoutError]) {
-		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestTimeoutError userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Request timeout", NSLocalizedFailureReasonErrorKey, nil]];
+		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestTimeoutError userInfo:@{NSLocalizedFailureReasonErrorKey: @"Request timeout"}];
     }
     else {
-		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestUnknownError userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Unknown error", NSLocalizedFailureReasonErrorKey, nil]];
+		toDelegateError = [NSError errorWithDomain:OFFlickrAPIRequestErrorDomain code:OFFlickrAPIRequestUnknownError userInfo:@{NSLocalizedFailureReasonErrorKey: @"Unknown error"}];
     }
     
     [self cleanUpTempFile];

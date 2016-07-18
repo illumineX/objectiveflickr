@@ -58,7 +58,7 @@ extern NSString *const OFFlickrDeletePermission;
     NSString *oauthToken;
     NSString *oauthTokenSecret;
 }
-- (id)initWithAPIKey:(NSString *)inKey sharedSecret:(NSString *)inSharedSecret;
+- (instancetype)initWithAPIKey:(NSString *)inKey sharedSecret:(NSString *)inSharedSecret NS_DESIGNATED_INITIALIZER;
 
 // OAuth URL
 - (NSURL *)userAuthorizationURLWithRequestToken:(NSString *)inRequestToken requestedPermission:(NSString *)inPermission;
@@ -131,13 +131,13 @@ typedef id<OFFlickrAPIRequestDelegate> OFFlickrAPIRequestDelegateType;
     
     id oauthState;
 }
-- (id)initWithAPIContext:(OFFlickrAPIContext *)inContext;
+- (instancetype)initWithAPIContext:(OFFlickrAPIContext *)inContext NS_DESIGNATED_INITIALIZER;
 - (OFFlickrAPIContext *)context;
 
 
 - (NSTimeInterval)requestTimeoutInterval;
 - (void)setRequestTimeoutInterval:(NSTimeInterval)inTimeInterval;
-- (BOOL)isRunning;
+@property (NS_NONATOMIC_IOSONLY, getter=isRunning, readonly) BOOL running;
 - (void)cancel;
 
 // oauth methods

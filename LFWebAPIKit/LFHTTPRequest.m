@@ -118,7 +118,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 	
 #else
 	NSPortMessage *message = [[[NSPortMessage alloc] initWithSendPort:_synchronousMessagePort receivePort:_synchronousMessagePort components:nil] autorelease];
-	[message setMsgid:0];
+	message.msgid = 0;
 	[message sendBeforeDate:[NSDate date]];	
 #endif
 }
@@ -190,7 +190,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 - (void)readStreamHasBytesAvailable
 {
     // to prevent from stray callbacks entering here
-    if (![self isRunning]) {
+    if (!self.isRunning) {
         return;
     }
 
@@ -220,10 +220,10 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
                 _expectedDataLength = [(NSString *)contentLengthString intValue];
 #else
                 if ([(NSString *)contentLengthString respondsToSelector:@selector(integerValue)]) {
-                    _expectedDataLength = [(NSString *)contentLengthString integerValue];
+                    _expectedDataLength = ((NSString *)contentLengthString).integerValue;
                 }
                 else {
-                    _expectedDataLength = [(NSString *)contentLengthString intValue];
+                    _expectedDataLength = ((NSString *)contentLengthString).intValue;
                 }
 #endif
 
@@ -293,7 +293,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
         }
         else {
             [_receivedData appendBytes:_readBuffer length:bytesRead];
-            _lastReceivedBytes = [_receivedData length];
+            _lastReceivedBytes = _receivedData.length;
             _lastReceivedDataUpdateTime = [NSDate timeIntervalSinceReferenceDate];
 
             if ([_delegate respondsToSelector:@selector(httpRequest:receivedBytes:expectedTotal:)]) {
@@ -306,12 +306,12 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 - (void)readStreamEndEncountered
 {
     // to prevent from stray callbacks entering here
-    if (![self isRunning]) {
+    if (!self.isRunning) {
         return;
     }
 
 	// if no byte read, we need to present the header at least again, because readStreamHasBytesAvailable is never called
-	if (![_receivedData length] && ![_delegate respondsToSelector:@selector(httpRequest:writeReceivedBytes:size:expectedTotal:)]) {
+	if (!_receivedData.length && ![_delegate respondsToSelector:@selector(httpRequest:writeReceivedBytes:size:expectedTotal:)]) {
 		if ([_delegate respondsToSelector:@selector(httpRequest:sentBytes:total:)]) {
 			[_delegate httpRequest:self sentBytes:_lastSentBytes total:_lastSentBytes];
 		}
@@ -335,10 +335,10 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 				_expectedDataLength = [(NSString *)contentLengthString intValue];
 	#else
 				if ([(NSString *)contentLengthString respondsToSelector:@selector(integerValue)]) {
-					_expectedDataLength = [(NSString *)contentLengthString integerValue];
+					_expectedDataLength = ((NSString *)contentLengthString).integerValue;
 				}
 				else {
-					_expectedDataLength = [(NSString *)contentLengthString intValue];
+					_expectedDataLength = ((NSString *)contentLengthString).intValue;
 				}
 	#endif
 
@@ -378,7 +378,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 - (void)readStreamErrorOccurred
 {
     // to prevent from stray callbacks entering here
-    if (![self isRunning]) {
+    if (!self.isRunning) {
         return;
     }
 
@@ -391,7 +391,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 @end
 
 @implementation LFHTTPRequest
-- (id)init
+- (instancetype)init
 {
     if ((self = [super init])) {
         _timeoutInterval = LFHTTPRequestDefaultTimeoutInterval;
@@ -449,16 +449,16 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
     // combine the header
     NSMutableDictionary *headerDictionary = [NSMutableDictionary dictionary];
     if (_userAgent) {
-        [headerDictionary setObject:_userAgent forKey:@"User-Agent"];
+        headerDictionary[@"User-Agent"] = _userAgent;
     }
 
     if (_contentType) {
-        [headerDictionary setObject:_contentType forKey:@"Content-Type"];
+        headerDictionary[@"Content-Type"] = _contentType;
     }
 
     if (inputStream) {
         if (byteStreamSize && byteStreamSize != NSUIntegerMax) {
-            [headerDictionary setObject:[NSString stringWithFormat:@"%lu", (unsigned long)byteStreamSize] forKey:@"Content-Length"];
+            headerDictionary[@"Content-Length"] = [NSString stringWithFormat:@"%lu", (unsigned long)byteStreamSize];
             _requestMessageBodySize = byteStreamSize;
         }
         else {
@@ -466,10 +466,10 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
         }
     }
     else {
-        if ([data length]) {
-            [headerDictionary setObject:[NSString stringWithFormat:@"%lu", (unsigned long)[data length]] forKey:@"Content-Length"];
+        if (data.length) {
+            headerDictionary[@"Content-Length"] = [NSString stringWithFormat:@"%lu", (unsigned long)data.length];
         }
-        _requestMessageBodySize = [data length];
+        _requestMessageBodySize = data.length;
     }
 
     if (_requestHeader) {
@@ -479,7 +479,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
     NSEnumerator *dictEnumerator = [headerDictionary keyEnumerator];
     id key;
     while ((key = [dictEnumerator nextObject])) {
-        CFHTTPMessageSetHeaderFieldValue(request, (CFStringRef)[key description], (CFStringRef)[headerDictionary objectForKey:key]);
+        CFHTTPMessageSetHeaderFieldValue(request, (CFStringRef)[key description], (CFStringRef)headerDictionary[key]);
     }
 
     if (!inputStream && data) {
@@ -531,7 +531,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
     }
 
     // detach and release the previous data buffer
-    if ([_receivedData length]) {
+    if (_receivedData.length) {
         NSMutableData *tmp = _receivedData;
         _receivedData = [NSMutableData new];
         [tmp release];
@@ -577,9 +577,9 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 
     if (_shouldWaitUntilDone) {
         NSRunLoop *currentRunLoop = [NSRunLoop currentRunLoop];
-        NSString *currentMode = [currentRunLoop currentMode];
+        NSString *currentMode = currentRunLoop.currentMode;
 		
-		if (![currentMode length]) {
+		if (!currentMode.length) {
 			currentMode = NSDefaultRunLoopMode;
 		}
 		
@@ -590,7 +590,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 			[currentRunLoop addPort:_synchronousMessagePort forMode:currentMode];
 		}
 		
-        while ([self isRunning]) {
+        while (self.isRunning) {
             [currentRunLoop runMode:currentMode beforeDate:[NSDate distantFuture]];
         }
 		

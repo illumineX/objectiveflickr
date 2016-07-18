@@ -68,12 +68,12 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 	[super finalize];
 }
 
-- (id)init
+- (instancetype)init
 {
 	if ((self = [super init])) {
 		siteRequest = [[LFHTTPRequest alloc] init];
-		[siteRequest setDelegate:self];
-		[siteRequest setTimeoutInterval:kDefaultTimeoutInterval];
+		siteRequest.delegate = self;
+		siteRequest.timeoutInterval = kDefaultTimeoutInterval;
 		
 		siteURL = [[NSURL URLWithString:kDefaultSite] retain];
 	}
@@ -96,7 +96,7 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 
 - (void)stopTimeoutTimer
 {
-	if ([timeoutTimer isValid]) {
+	if (timeoutTimer.valid) {
 		[timeoutTimer invalidate];
 	}
 	
@@ -120,7 +120,7 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 			
 			// next stage: send the request
 			[siteRequest cancelWithoutDelegateMessage];
-			[siteRequest setSessionInfo:connectionType];
+			siteRequest.sessionInfo = connectionType;
 			if ([siteRequest performMethod:LFHTTPRequestHEADMethod onURL:siteURL withData:nil]) {
 				return;
 			}				
@@ -191,7 +191,7 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 	SCNetworkReachabilityScheduleWithRunLoop(reachability, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 			
 	if (createTimeoutTimer) {
-		timeoutTimer = [[NSTimer scheduledTimerWithTimeInterval:[siteRequest timeoutInterval] target:self selector:@selector(handleTimeoutTimer:) userInfo:NULL repeats:NO] retain];
+		timeoutTimer = [[NSTimer scheduledTimerWithTimeInterval:siteRequest.timeoutInterval target:self selector:@selector(handleTimeoutTimer:) userInfo:NULL repeats:NO] retain];
 	}
 }
 
@@ -216,12 +216,12 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 
 - (NSTimeInterval)timeoutInterval
 {
-	return [siteRequest timeoutInterval];
+	return siteRequest.timeoutInterval;
 }
 
 - (void)setTimeoutInterval:(NSTimeInterval)inInterval
 {
-	[siteRequest setTimeoutInterval:inInterval];
+	siteRequest.timeoutInterval = inInterval;
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4                
@@ -237,10 +237,10 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
 {
 	LFSRDebug(@"%s, connection type: %@, received data: %@", __PRETTY_FUNCTION__, [request sessionInfo], [request receivedData]);
 	
-	if (lastCheckStatus != [request sessionInfo]) {
-		lastCheckStatus = [request sessionInfo];
+	if (lastCheckStatus != request.sessionInfo) {
+		lastCheckStatus = request.sessionInfo;
 		if ([delegate respondsToSelector:@selector(reachability:site:isAvailableOverConnectionType:)]) {
-			[delegate reachability:self site:siteURL isAvailableOverConnectionType:[request sessionInfo]];
+			[delegate reachability:self site:siteURL isAvailableOverConnectionType:request.sessionInfo];
 		}	
 	}
 }

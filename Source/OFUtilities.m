@@ -30,7 +30,7 @@
 
 NSString *OFMD5HexStringFromNSString(NSString *inStr)
 {
-    const char *data = [inStr UTF8String];
+    const char *data = inStr.UTF8String;
     CC_LONG length = (CC_LONG) strlen(data);
     
     unsigned char *md5buf = (unsigned char*)calloc(1, CC_MD5_DIGEST_LENGTH);
@@ -77,8 +77,8 @@ static NSData *OFSha1(NSData *inData)
     NSMutableData *result = [NSMutableData dataWithLength:CC_SHA1_DIGEST_LENGTH];
     CC_SHA1_CTX context;
     CC_SHA1_Init(&context);
-    CC_SHA1_Update(&context, [inData bytes], (CC_LONG)[inData length]);
-    CC_SHA1_Final([result mutableBytes], &context);
+    CC_SHA1_Update(&context, inData.bytes, (CC_LONG)inData.length);
+    CC_SHA1_Final(result.mutableBytes, &context);
     return result;
 }
 
@@ -90,12 +90,12 @@ NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage)
 {
     NSData *keyData = [inKey dataUsingEncoding:NSUTF8StringEncoding];
     
-    if ([keyData length] > CC_SHA1_BLOCK_BYTES) {
+    if (keyData.length > CC_SHA1_BLOCK_BYTES) {
         keyData = OFSha1(keyData);
     }
     
-    if ([keyData length] < CC_SHA1_BLOCK_BYTES) {
-        NSUInteger padSize = CC_SHA1_BLOCK_BYTES - [keyData length];
+    if (keyData.length < CC_SHA1_BLOCK_BYTES) {
+        NSUInteger padSize = CC_SHA1_BLOCK_BYTES - keyData.length;
 
         NSMutableData *paddedData = [NSMutableData dataWithData:keyData];
         [paddedData appendData:[NSMutableData dataWithLength:padSize]];
@@ -105,9 +105,9 @@ NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage)
     NSMutableData *oKeyPad = [NSMutableData dataWithLength:CC_SHA1_BLOCK_BYTES];
     NSMutableData *iKeyPad = [NSMutableData dataWithLength:CC_SHA1_BLOCK_BYTES];
 
-    const uint8_t *kdPtr = [keyData bytes];
-    uint8_t *okpPtr = [oKeyPad mutableBytes];
-    uint8_t *ikpPtr = [iKeyPad mutableBytes];
+    const uint8_t *kdPtr = keyData.bytes;
+    uint8_t *okpPtr = oKeyPad.mutableBytes;
+    uint8_t *ikpPtr = iKeyPad.mutableBytes;
 
     memset(okpPtr, 0x5c, CC_SHA1_BLOCK_BYTES);
     memset(ikpPtr, 0x36, CC_SHA1_BLOCK_BYTES);
@@ -131,7 +131,7 @@ NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage)
     
     
 	size_t outputLength;
-	char *outputBuffer = NewBase64Encode([outerHashedData bytes], [outerHashedData length], true, &outputLength);
+	char *outputBuffer = NewBase64Encode(outerHashedData.bytes, outerHashedData.length, true, &outputLength);
 	
 	NSString *result = [[[NSString alloc] initWithBytes:outputBuffer length:outputLength encoding:NSASCIIStringEncoding] autorelease];
 	free(outputBuffer);
@@ -140,7 +140,7 @@ NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage)
 
 NSDictionary *OFExtractURLQueryParameter(NSString *inQuery)
 {
-    if (![inQuery length]) {
+    if (!inQuery.length) {
         return nil;        
     }
 
@@ -149,11 +149,11 @@ NSDictionary *OFExtractURLQueryParameter(NSString *inQuery)
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     for (NSString *p in params) {
         NSArray *kv = [p componentsSeparatedByString:@"="];
-        if ([kv count] != 2) {
+        if (kv.count != 2) {
             return nil;
         }
         
-        [dict setObject:[kv objectAtIndex:1] forKey:[kv objectAtIndex:0]];
+        dict[kv[0]] = kv[1];
     }
     return dict;
 }
@@ -163,15 +163,15 @@ BOOL OFExtractOAuthCallback(NSURL *inReceivedURL, NSURL *inBaseURL, NSString **o
     assert(outRequestToken && "outRequestToken cannot be nil");
     assert(outVerifier && "outVerifier cannot be nil");
     
-    NSString *ruStr = [inReceivedURL absoluteString];
-    NSString *buStr = [[inBaseURL absoluteString] stringByAppendingString:@"?"];
+    NSString *ruStr = inReceivedURL.absoluteString;
+    NSString *buStr = [inBaseURL.absoluteString stringByAppendingString:@"?"];
     
     if (![ruStr hasPrefix:buStr]) {
         return NO;
     }
     
-    NSString *query = [ruStr substringFromIndex:[buStr length]];
-    if (![query length]) {
+    NSString *query = [ruStr substringFromIndex:buStr.length];
+    if (!query.length) {
         return NO;
     }
     
@@ -180,8 +180,8 @@ BOOL OFExtractOAuthCallback(NSURL *inReceivedURL, NSURL *inBaseURL, NSString **o
         return NO;
     }
     
-    NSString *t = [dict objectForKey:@"oauth_token"];
-    NSString *v = [dict objectForKey:@"oauth_verifier"];
+    NSString *t = dict[@"oauth_token"];
+    NSString *v = dict[@"oauth_verifier"];
     
     if (!t || !v) {
         return NO;

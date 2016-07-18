@@ -29,5 +29,5 @@
 #import <Foundation/Foundation.h>
 
 @interface NSData (LFHTTPFormExtensions)
-+ (id)dataAsWWWURLEncodedFormFromDictionary:(NSDictionary *)formDictionary;
++ (instancetype)dataAsWWWURLEncodedFormFromDictionary:(NSDictionary *)formDictionary;
 @end

@@ -29,18 +29,18 @@
 #import "NSData+LFHTTPFormExtensions.h"
 
 @implementation NSData (LFHTTPFormExtensions)
-+ (id)dataAsWWWURLEncodedFormFromDictionary:(NSDictionary *)formDictionary
++ (instancetype)dataAsWWWURLEncodedFormFromDictionary:(NSDictionary *)formDictionary
 {
     NSMutableString *combinedDataString = [NSMutableString string];
     NSEnumerator *enumerator = [formDictionary keyEnumerator];
 
     NSString *key = [enumerator nextObject];
     if (key) {
-        NSString *value = [[formDictionary objectForKey:key] description];
+        NSString *value = [formDictionary[key] description];
         [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
 
 		while ((key = [enumerator nextObject])) {
-			value = [[formDictionary objectForKey:key] description];
+			value = [formDictionary[key] description];
             [combinedDataString appendString:[NSString stringWithFormat:@"%@=%@", [key stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]], [value stringByAddingPercentEncodingWithAllowedCharacters: [NSCharacterSet URLQueryAllowedCharacterSet]]]];
 		}
 	}

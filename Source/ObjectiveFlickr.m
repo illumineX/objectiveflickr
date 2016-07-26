@@ -92,6 +92,9 @@ static void AssertIsValidURLString(NSString *urlString)
     [super dealloc];
 }
 
+- (instancetype)init {
+    return [self initWithAPIKey:nil sharedSecret:nil];
+}
 - (instancetype)initWithAPIKey:(NSString *)inKey sharedSecret:(NSString *)inSharedSecret
 {
     if ((self = [super init])) {
@@ -399,6 +402,9 @@ static void AssertIsValidURLString(NSString *urlString)
     [super dealloc];
 }
 
+- (instancetype)init {
+    return [self initWithAPIContext:nil];
+}
 - (instancetype)initWithAPIContext:(OFFlickrAPIContext *)inContext
 {
     if ((self = [super init])) {

@@ -1,7 +1,7 @@
 //
 // OFXMLMapper.h
 //
-// Copyright (c) 2006-2014 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2006-2014 Lukhnos D. Liu (https://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation

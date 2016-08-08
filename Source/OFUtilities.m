@@ -1,7 +1,7 @@
 //
 // OFUtilities.m
 //
-// Copyright (c) 2006-2014 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2006-2014 Lukhnos D. Liu (https://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -85,7 +85,7 @@ static NSData *OFSha1(NSData *inData)
 static char *NewBase64Encode(const void *buffer, size_t length, bool separateLines, size_t *outputLength);
 
 
-// http://en.wikipedia.org/wiki/HMAC
+// https://en.wikipedia.org/wiki/HMAC
 NSString *OFHMACSha1Base64(NSString *inKey, NSString *inMessage)
 {
     NSData *keyData = [inKey dataUsingEncoding:NSUTF8StringEncoding];
@@ -194,7 +194,7 @@ BOOL OFExtractOAuthCallback(NSURL *inReceivedURL, NSURL *inBaseURL, NSString **o
 
 
 
-// From http://cocoawithlove.com/2009/06/base64-encoding-options-on-mac-and.html
+// From https://cocoawithlove.com/2009/06/base64-encoding-options-on-mac-and.html
 //
 // License header:
 //

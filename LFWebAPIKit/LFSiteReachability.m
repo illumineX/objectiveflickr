@@ -1,8 +1,8 @@
 //
 // LFSiteReachability.m
 //
-// Copyright (c) 2007-2009 Lithoglyph Inc. (http://lithoglyph.com)
-// Copyright (c) 2007-2009 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2007-2009 Lithoglyph Inc. (https://lithoglyph.com)
+// Copyright (c) 2007-2009 Lukhnos D. Liu (https://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
 #import "LFSiteReachability.h"
 #import <arpa/inet.h>
 
-static NSString *kDefaultSite = @"http://google.com";
+static NSString *kDefaultSite = @"https://google.com";
 static NSTimeInterval kDefaultTimeoutInterval = 15.0;
 
 #define LFSRDebug(format, ...)

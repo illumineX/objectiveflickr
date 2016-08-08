@@ -1,7 +1,7 @@
 //
 // ObjectiveFlickr.m
 //
-// Copyright (c) 2006-2014 Lukhnos D. Liu (http://lukhnos.org)
+// Copyright (c) 2006-2014 Lukhnos D. Liu (https://lukhnos.org)
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -137,9 +137,9 @@ static void AssertIsValidURLString(NSString *urlString)
 - (NSURL *)photoSourceURLFromDictionary:(NSDictionary *)inDictionary size:(NSString *)inSizeModifier
 {
     // From https://www.flickr.com/services/api/misc.urls.html, the URL is one of the following:
-    // * http://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
-    // * http://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}_[mstzb].jpg
-    // * http://farm{farm-id}.staticflickr.com/{server-id}/{id}_{o-secret}_o.(jpg|gif|png)
+    // * https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}.jpg
+    // * https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{secret}_[mstzb].jpg
+    // * https://farm{farm-id}.staticflickr.com/{server-id}/{id}_{o-secret}_o.(jpg|gif|png)
 
 
 	NSString *photoID = inDictionary[@"id"];

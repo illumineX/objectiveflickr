@@ -61,12 +61,14 @@ static void LFSiteReachabilityCallback(SCNetworkReachabilityRef inTarget, SCNetw
     [super dealloc];
 }
 
+#if __has_feature(objc_arc)
 - (void)finalize
 {
 	[siteRequest setDelegate:nil];
 	[self stopChecking];
 	[super finalize];
 }
+#endif
 
 - (instancetype)init
 {

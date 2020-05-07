@@ -99,6 +99,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 
 }
 
+#if __has_feature(objc_arc)
 - (void)finalize
 {
     [self cleanUp];
@@ -109,7 +110,7 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
 
     [super finalize];
 }
-
+#endif
 
 - (void)_exitRunLoop
 {
@@ -418,7 +419,10 @@ void LFHRReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType even
     [_sessionInfo release];
     _sessionInfo = nil;
     
-    free(_readBuffer);
+    if (_readBuffer) {
+        free(_readBuffer);
+        _readBuffer = NULL;
+    }
     [super dealloc];
 }
 
